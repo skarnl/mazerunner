@@ -1,0 +1,27 @@
+{
+    "name": "mazerunner",
+    "version": "0.1.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "babel": "babel src --stage 1 --out-dir web/js --modules system",
+        "babel-watch": "babel src --stage 1 --watch --out-dir web/js --modules system"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/joppe/react.git"
+    },
+    "author": "Joppe Aarts",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/joppe/react/issues"
+    },
+    "devDependencies": {
+        "babel": "^5.8.23",
+        "es6-module-loader": "^0.17.8",
+        "systemjs": "^0.19.3"
+    },
+    "dependencies": {
+        "babel-core": "^5.8.25"
+    }
+}

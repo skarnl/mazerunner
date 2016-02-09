@@ -1,12 +1,7 @@
-// import Worker from 'worker';
+import {Worker} from 'js/Worker.js';
 
-
-class Application 
+export class Application 
 {
-	canvas: any;
-	context: CanvasRenderingContext2D;
-	img: any;
-
 	constructor() {
 		this.createCanvas();
 	}
@@ -40,10 +35,11 @@ class Application
 		this.img.addEventListener('load', this.imageSuccessHandler.bind(this));
 		this.img.addEventListener('error', this.imageErrorHandler.bind(this));
 		
-		this.img.src = "maze.png";
+		this.img.src = "media/maze.png";
+		this.img.crossOrigin = "Anonymous";
 	}
 
-	imageSuccessHandler (event:Event) {
+	imageSuccessHandler (event) {
 		console.log(event);
 		console.log('success');
 
@@ -52,19 +48,15 @@ class Application
 		this.spawnWorker();
 	}
 
-	imageErrorHandler (event:Event) {
+	imageErrorHandler (event) {
 		console.log('ERROR');
 	}
 
 	spawnWorker() {
-		let w = new Worker();
+		var imgd = this.context.getImageData(0, 0, this.img.width, this.img.height);
+		var pix = imgd.data;
+
+		let w = new Worker(pix);
+		w.work();
 	}
 }
-
-class Worker {
-	
-}
-
-//kickstart
-var a = new Application();
-a.run();
