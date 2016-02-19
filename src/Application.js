@@ -189,28 +189,14 @@ export class Application
 
 	spawnWorker ()
 	{
-		
-
 		let w = new Worker(pix);
 		w.addEventListener(Events.CROSSROAD_FOUND, this.crossroadFoundHandler.bind(this));
 		w.work();
 	}
 
-	drawPixel (startPoint, endPoint = undefined)
+	drawPixel (startPoint, size = 10)
 	{
-		if (endPoint === undefined) {
-			endPoint = startPoint;
-			endPoint.x = endPoint.x + 1;
-			endPoint.y = endPoint.y + 1;
-		}
-
-		this.context.beginPath();
-		this.context.lineWidth = 3;
-
-		// set line color
-		this.context.strokeStyle = '#FF0000';
-  		this.context.moveTo(startPoint.x, startPoint.y);
-  		this.context.lineTo(endPoint.x, endPoint.y);
-  		this.context.stroke();
+		this.context.fillStyle = '#FF69B4';
+  		this.context.fillRect(startPoint.x - Math.ceil(size/2), startPoint.y - Math.ceil(size/2), size, size);
 	}
 }
