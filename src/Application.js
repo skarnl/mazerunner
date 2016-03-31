@@ -3,7 +3,7 @@ import {Events} from 'js/Events.js';
 import {Point} from 'js/Point.js';
 import {Worker} from 'js/Worker.js';
 
-export class Application 
+export class Application
 {
 	constructor()
 	{
@@ -83,7 +83,7 @@ export class Application
 
 		console.log('Found topLeftCorner: ' + this.topLeftCorner);
 
-		this.drawPixel(this.topLeftCorner, 1);
+		this.drawPixel(this.topLeftCorner);
 	}
 
 	findTopRightCorner()
@@ -98,7 +98,7 @@ export class Application
 		}
 
 		console.log('Found topRightCorner: ' + this.topRightCorner);
-		this.drawPixel(this.topRightCorner, 1);
+		this.drawPixel(this.topRightCorner);
 	}
 
 	findBottomRightCorner()
@@ -206,9 +206,13 @@ export class Application
 		w.work();
 	}
 
-	drawPixel (startPoint, size = 10)
+	drawPixel (startPoint)
 	{
-		this.context.fillStyle = '#FF69B4';
-  		this.context.fillRect(startPoint.x, startPoint.y, 1, 1);
+        if(Application.DEBUG) {
+            this.context.fillStyle = '#FF0000';
+            this.context.fillRect(startPoint.x, startPoint.y, 4, 4);
+        }
 	}
 }
+
+Application.DEBUG = true;
