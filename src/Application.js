@@ -5,6 +5,9 @@ import {Worker} from 'js/Worker.js';
 
 export class Application
 {
+    DEBUG = true;
+    DEBUG_PIXEL_SIZE = 1;
+
 	constructor()
 	{
 		this.createCanvas();
@@ -137,7 +140,23 @@ export class Application
 	}
 
     determineWallThickness() {
+        let x = this.topLeftCorner.x,
+            y = this.topLeftCorner.y,
+            wallThicknessCounter = 0,
+            found = false;
 
+        while(!found) {
+            if (this.isBlack(x, y)) {
+                x += 1;
+                y += 1;
+
+                wallThicknessCounter++;
+            } else {
+                found = true;
+            }
+        }
+
+        this.wallThickness = wallThicknessCounter;
     }
 
 	findEntrance ()
@@ -147,15 +166,12 @@ export class Application
 		this.entrance = new Doorway();
 
 		let currentX = this.topLeftCorner.x,
-			currentY = this.topLeftCorner.y,
-			previousX,
-			previousY;
+			currentY = this.topLeftCorner.y;
 
 		while( !this.entrance.isDefined() ) {
 			if(this.isWhite(currentX, currentY)) {
 				if (this.entrance.getLeftPost() === null) {
-					//Math.min -> so we don't need to remember if we are going horizontal or vertical
-					this.entrance.setLeftPost(Math.min(currentX, previousX), Math.min(currentY, previousY));
+					this.entrance.setLeftPost(currentX, currentY);
 				}
 			} else { //black
 				if (this.entrance.getLeftPost() && this.entrance.getRightPost() === null) {
@@ -165,16 +181,27 @@ export class Application
 
 			currentX++;
 
+            //TODO - we need some solution to loop around the whole maze
+            // als we topRight zijn, dan naar beneden
+            // en als we dan nog niks gevonden hebben, dan gewoon weer vanaf topLeft beginnen, maar dan naar beneden
+            // en dan horizontaal
+            //
+            // ---> geen gekut met teruglopen vanaf rechts enzo :|
+
 			if (currentX > this.topRightCorner.x) {
 				currentX = this.topRightCorner.x;
-				currentY++;
+                currentY++;
 			}
 
 			if (currentY > this.bottomRightCorner.y) {
 				currentY = this.bottomRightCorner.y;
-				currentX--;
+                currentX--;
 			}
 		}
+
+        console.log(this.entrance);
+        this.drawLine(this.entrance.getLeftPost(), this.entrance.getRightPost());
+        console.log(this.entrance.getWidth());
 	}
 
 	getPixel (x, y)
@@ -190,13 +217,7 @@ export class Application
 
 	isBlack (x, y)
 	{
-		let b = !this.isWhite(x, y);
-
-		if (b) {
-			console.log('###isBlack###');
-			console.log(this.getPixel(x, y));
-		}
-		return b;
+		return !this.isWhite(x, y);
 	}
 
 	spawnWorker ()
@@ -208,11 +229,23 @@ export class Application
 
 	drawPixel (startPoint)
 	{
-        if(Application.DEBUG) {
-            this.context.fillStyle = '#FF0000';
-            this.context.fillRect(startPoint.x, startPoint.y, 4, 4);
+        if(this.DEBUG) {
+            this.context.fillStyle = '#ff0000';
+            this.context.fillRect(startPoint.x, startPoint.y, this.DEBUG_PIXEL_SIZE, this.DEBUG_PIXEL_SIZE);
         }
 	}
-}
 
-Application.DEBUG = true;
+    drawLine (firstPoint, secondPoint) {
+        
+        console.log(this.DEBUG);
+        
+        if(this.DEBUG) {
+            this.context.strokeStyle = '#00ff2a';
+            this.context.beginPath();
+            this.context.moveTo(firstPoint.x, firstPoint.y - 2 + 0.5);
+            this.context.lineTo(secondPoint.x, secondPoint.y - 2 + 0.5);
+            this.context.closePath();
+            this.context.stroke();
+        }
+    }
+}
