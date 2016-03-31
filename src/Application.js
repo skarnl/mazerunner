@@ -1,7 +1,8 @@
 import {Doorway} from 'js/Doorway.js';
 import {Events} from 'js/Events.js';
 import {Point} from 'js/Point.js';
-import {Worker} from 'js/Worker.js';
+import {Runner} from 'js/Runner.js';
+import {Utils} from 'js/Utils.js';
 
 export class Application
 {
@@ -14,15 +15,12 @@ export class Application
 	}
 
 
-	run ()
+	gogogo ()
 	{
-		console.log('Application.start');
+		console.log('Application.gogogo');
 
+		//loading the image is the kickstart of the whole story ^^
 		this.loadImage();
-
-		// determine the entrance
-		// seal the rest ^^
-		// enter the maze, start a worker
 	}
 
 
@@ -44,8 +42,8 @@ export class Application
 		this.img.addEventListener('error', this.imageErrorHandler.bind(this));
 		
 		// this.img.src = "media/maze.png";
-		//this.img.src = "media/maze20x20.gif";
-		this.img.src = "media/maze50x40.gif";
+		this.img.src = "media/maze20x20.gif";
+		//this.img.src = "media/maze50x40.gif";
 		this.img.crossOrigin = "Anonymous";
 	}
 
@@ -56,6 +54,7 @@ export class Application
 
 		this.context.drawImage(this.img, 0, 0, this.img.width, this.img.height);
 
+		//we have an image, let's go with tha banana
 		this.startSequence();
 	}
 
@@ -67,9 +66,10 @@ export class Application
 	startSequence ()
 	{
 		this.findDimensionsOfMaze();
+		this.determineWallThickness();
+		this.findEntrance();
 
-		// this.lookForEntrance();
-		// this.spawnWorker();
+		this.spawnFirstWorker();
 	}
 
 	findTopLeftCorner ()
@@ -78,7 +78,7 @@ export class Application
 		for( let iy = 0; iy < this.img.height - 1; iy++ ) {
 			for( let ix = 0; ix < this.img.width - 1; ix++) {
 
-				if (this.isBlack(ix , iy)) {
+				if (Utils.isBlack(this.context, ix , iy)) {
 					this.topLeftCorner = new Point(ix, iy);
 					break find_top_corner_loop;
 				}
@@ -95,7 +95,7 @@ export class Application
 		let currentY = this.topLeftCorner.y;
 
 		for (let x = this.img.width - 1; x > this.topLeftCorner.x; x--) {
-			if (this.isBlack(x, currentY)) {
+			if (Utils.isBlack(this.context, x, currentY)) {
 				this.topRightCorner = new Point(x, currentY);
 				break;
 			}
@@ -110,7 +110,7 @@ export class Application
 		let currentX = this.topRightCorner.x;
 
 		for (let y = this.img.height - 1; y > this.topRightCorner.y; y--) {
-			if (this.isBlack(currentX, y)) {
+			if (Utils.isBlack(this.context, currentX, y)) {
 				this.bottomRightCorner = new Point(currentX, y);
 				break;
 			}
@@ -134,10 +134,6 @@ export class Application
 		this.findTopRightCorner();
 		this.findBottomRightCorner();
 		this.defineBottomLeftCorner();
-
-        this.determineWallThickness();
-
-		this.findEntrance();
 	}
 
     determineWallThickness()
@@ -148,12 +144,11 @@ export class Application
 			found = false;
 
 		while (!found) {
-			if (this.isBlack(x, y)) {
-				x += 1;
-				y += 1;
+			x += 1;
+			y += 1;
+			wallThicknessCounter++;
 
-				wallThicknessCounter++;
-			} else {
+			if (Utils.isWhite(this.context, x, y)) {
 				found = true;
 			}
 
@@ -162,7 +157,8 @@ export class Application
 				break;
 			}
 		}
-
+		
+		console.log(wallThicknessCounter);
 		this.wallThickness = wallThicknessCounter;
 	}
 
@@ -174,8 +170,10 @@ export class Application
 			currentY = this.topLeftCorner.y,
 			mode = 'horizontal';
 
+		this.direction = Runner.DIRECTION_DOWN;
+
 		while( !this.entrance.isDefined() ) {
-			if(this.isWhite(currentX, currentY)) {
+			if(Utils.isWhite(this.context, currentX, currentY)) {
 				if (this.entrance.getLeftPost() === null) {
 					this.entrance.setLeftPost(currentX, currentY);
 				}
@@ -198,6 +196,7 @@ export class Application
 					currentY++;
 
 					mode = 'right_vertical';
+					this.direction = Runner.DIRECTION_LEFT;
 				} else {
 					console.log('We did not find an entrance!');
 					break;
@@ -209,11 +208,14 @@ export class Application
 					currentX = this.topLeftCorner.x;
 					currentY = this.topLeftCorner.y + 1;
 
-					mode = 'leftvertical'
+					mode = 'leftvertical';
+					this.direction = Runner.DIRECTION_RIGHT;
 				} else {
 					currentY = this.bottomLeftCorner.y;
 					currentX = this.bottomLeftCorner.x + 1;
 					mode = 'bottom_horizontal';
+
+					this.direction = Runner.DIRECTION_UP;
 				}
 			}
 		}
@@ -224,27 +226,23 @@ export class Application
 		this.pathWidth = this.entrance.getWidth();
 	}
 
-	getPixel (x, y)
+	spawnFirstWorker ()
 	{
-    	return this.context.getImageData(x, y, 1, 1).data;
+		let runner = new Runner();
+		runner.id = new Date().getTime();
+		runner.context = this.context;
+		runner.pathWidth = this.pathWidth;
+		runner.wallThickness = this.wallThickness;
+		runner.callback = this.crossroadFoundHandler.bind(this, {param1:'foo', param2: 'bar'});
+
+		runner.startRunning(this.entrance.getLeftPost(), this.direction);
 	}
 
-	isWhite (x, y)
+	crossroadFoundHandler (params, runnerReference)
 	{
-		let pixelData = this.getPixel(x, y);
-		return pixelData[0] === 255 && pixelData[1] === 255 && pixelData[2] === 255;
-	}
-
-	isBlack (x, y)
-	{
-		return !this.isWhite(x, y);
-	}
-
-	spawnWorker ()
-	{
-		let w = new Worker(pix);
-		w.addEventListener(Events.CROSSROAD_FOUND, this.crossroadFoundHandler.bind(this));
-		w.work();
+		console.log('Application::crossroadFoundHandler');
+		console.log(paramsx);
+		console.log(runnerReference);
 	}
 
 	drawPixel (startPoint)
@@ -258,12 +256,8 @@ export class Application
     drawLine (firstPoint, secondPoint)
 	{
         if(this.DEBUG) {
-            this.context.strokeStyle = '#ff0000';
-            this.context.beginPath();
-            this.context.moveTo(firstPoint.x, firstPoint.y);
-            this.context.lineTo(secondPoint.x, secondPoint.y);
-            this.context.closePath();
-            this.context.stroke();
+           this.drawPixel(firstPoint);
+           this.drawPixel(secondPoint);
         }
     }
 }

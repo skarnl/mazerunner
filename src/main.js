@@ -3,4 +3,4 @@
 import {Application} from 'js/Application.js';
 
 let a = new Application();
-a.run();
+a.gogogo();
