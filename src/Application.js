@@ -44,7 +44,8 @@ export class Application
 		this.img.addEventListener('error', this.imageErrorHandler.bind(this));
 		
 		// this.img.src = "media/maze.png";
-		this.img.src = "media/maze20x20.gif";
+		//this.img.src = "media/maze20x20.gif";
+		this.img.src = "media/maze50x40.gif";
 		this.img.crossOrigin = "Anonymous";
 	}
 
@@ -139,34 +140,39 @@ export class Application
 		this.findEntrance();
 	}
 
-    determineWallThickness() {
-        let x = this.topLeftCorner.x,
-            y = this.topLeftCorner.y,
-            wallThicknessCounter = 0,
-            found = false;
+    determineWallThickness()
+	{
+		let x = this.topLeftCorner.x,
+			y = this.topLeftCorner.y,
+			wallThicknessCounter = 0,
+			found = false;
 
-        while(!found) {
-            if (this.isBlack(x, y)) {
-                x += 1;
-                y += 1;
+		while (!found) {
+			if (this.isBlack(x, y)) {
+				x += 1;
+				y += 1;
 
-                wallThicknessCounter++;
-            } else {
-                found = true;
-            }
-        }
+				wallThicknessCounter++;
+			} else {
+				found = true;
+			}
 
-        this.wallThickness = wallThicknessCounter;
-    }
+			if (wallThicknessCounter > 10) {
+				console.log('Walls are too thick!');
+				break;
+			}
+		}
+
+		this.wallThickness = wallThicknessCounter;
+	}
 
 	findEntrance ()
 	{
-		console.log('- findEntrance');
-		
 		this.entrance = new Doorway();
 
 		let currentX = this.topLeftCorner.x,
-			currentY = this.topLeftCorner.y;
+			currentY = this.topLeftCorner.y,
+			mode = 'horizontal';
 
 		while( !this.entrance.isDefined() ) {
 			if(this.isWhite(currentX, currentY)) {
@@ -179,29 +185,43 @@ export class Application
 				}
 			}
 
-			currentX++;
-
-            //TODO - we need some solution to loop around the whole maze
-            // als we topRight zijn, dan naar beneden
-            // en als we dan nog niks gevonden hebben, dan gewoon weer vanaf topLeft beginnen, maar dan naar beneden
-            // en dan horizontaal
-            //
-            // ---> geen gekut met teruglopen vanaf rechts enzo :|
+			if (mode == 'horizontal') {
+				currentX++;
+			}
+			else {
+				currentY++;
+			}
 
 			if (currentX > this.topRightCorner.x) {
-				currentX = this.topRightCorner.x;
-                currentY++;
+				if (mode == 'horizontal') {
+					currentX = this.topRightCorner.x;
+					currentY++;
+
+					mode = 'right_vertical';
+				} else {
+					console.log('We did not find an entrance!');
+					break;
+				}
 			}
 
 			if (currentY > this.bottomRightCorner.y) {
-				currentY = this.bottomRightCorner.y;
-                currentX--;
+				if (mode == 'right_vertical') {
+					currentX = this.topLeftCorner.x;
+					currentY = this.topLeftCorner.y + 1;
+
+					mode = 'leftvertical'
+				} else {
+					currentY = this.bottomLeftCorner.y;
+					currentX = this.bottomLeftCorner.x + 1;
+					mode = 'bottom_horizontal';
+				}
 			}
 		}
 
-        console.log(this.entrance);
+		console.log('Entrance found: ' + this.entrance);
+
         this.drawLine(this.entrance.getLeftPost(), this.entrance.getRightPost());
-        console.log(this.entrance.getWidth());
+		this.pathWidth = this.entrance.getWidth();
 	}
 
 	getPixel (x, y)
@@ -235,15 +255,13 @@ export class Application
         }
 	}
 
-    drawLine (firstPoint, secondPoint) {
-        
-        console.log(this.DEBUG);
-        
+    drawLine (firstPoint, secondPoint)
+	{
         if(this.DEBUG) {
-            this.context.strokeStyle = '#00ff2a';
+            this.context.strokeStyle = '#ff0000';
             this.context.beginPath();
-            this.context.moveTo(firstPoint.x, firstPoint.y - 2 + 0.5);
-            this.context.lineTo(secondPoint.x, secondPoint.y - 2 + 0.5);
+            this.context.moveTo(firstPoint.x, firstPoint.y);
+            this.context.lineTo(secondPoint.x, secondPoint.y);
             this.context.closePath();
             this.context.stroke();
         }
