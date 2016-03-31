@@ -62,7 +62,7 @@ export class Application
 
 	startSequence ()
 	{
-		this.findDimentionsOfMaze();
+		this.findDimensionsOfMaze();
 
 		// this.lookForEntrance();
 		// this.spawnWorker();
@@ -71,10 +71,10 @@ export class Application
 	findTopLeftCorner ()
 	{
 		find_top_corner_loop:
-		for( let iy = 0; iy < this.img.height; iy++ ) {
-			for( let ix = 0; ix < this.img.width; ix++) {
+		for( let iy = 0; iy < this.img.height - 1; iy++ ) {
+			for( let ix = 0; ix < this.img.width - 1; ix++) {
 
-				if (!this.isWhite(ix , iy)) {
+				if (this.isBlack(ix , iy)) {
 					this.topLeftCorner = new Point(ix, iy);
 					break find_top_corner_loop;
 				}
@@ -83,14 +83,14 @@ export class Application
 
 		console.log('Found topLeftCorner: ' + this.topLeftCorner);
 
-		this.drawPixel(this.topLeftCorner);
+		this.drawPixel(this.topLeftCorner, 1);
 	}
 
 	findTopRightCorner()
 	{
 		let currentY = this.topLeftCorner.y;
 
-		for (let x = this.img.width; x > this.topLeftCorner.x; x--) {
+		for (let x = this.img.width - 1; x > this.topLeftCorner.x; x--) {
 			if (this.isBlack(x, currentY)) {
 				this.topRightCorner = new Point(x, currentY);
 				break;
@@ -98,14 +98,14 @@ export class Application
 		}
 
 		console.log('Found topRightCorner: ' + this.topRightCorner);
-		this.drawPixel(this.topRightCorner);
+		this.drawPixel(this.topRightCorner, 1);
 	}
 
 	findBottomRightCorner()
 	{
 		let currentX = this.topRightCorner.x;
 
-		for (let y = this.img.height; y > this.topRightCorner.y; y--) {
+		for (let y = this.img.height - 1; y > this.topRightCorner.y; y--) {
 			if (this.isBlack(currentX, y)) {
 				this.bottomRightCorner = new Point(currentX, y);
 				break;
@@ -124,15 +124,21 @@ export class Application
 		this.drawPixel(this.bottomLeftCorner);
 	}
 
-	findDimentionsOfMaze ()
+	findDimensionsOfMaze ()
 	{
 		this.findTopLeftCorner();
 		this.findTopRightCorner();
 		this.findBottomRightCorner();
 		this.defineBottomLeftCorner();
 
+        this.determineWallThickness();
+
 		this.findEntrance();
 	}
+
+    determineWallThickness() {
+
+    }
 
 	findEntrance ()
 	{
@@ -184,7 +190,13 @@ export class Application
 
 	isBlack (x, y)
 	{
-		return !this.isWhite(x, y);
+		let b = !this.isWhite(x, y);
+
+		if (b) {
+			console.log('###isBlack###');
+			console.log(this.getPixel(x, y));
+		}
+		return b;
 	}
 
 	spawnWorker ()
@@ -197,6 +209,6 @@ export class Application
 	drawPixel (startPoint, size = 10)
 	{
 		this.context.fillStyle = '#FF69B4';
-  		this.context.fillRect(startPoint.x - Math.ceil(size/2), startPoint.y - Math.ceil(size/2), size, size);
+  		this.context.fillRect(startPoint.x, startPoint.y, 1, 1);
 	}
 }
