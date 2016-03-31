@@ -36,4 +36,9 @@ export class Doorway
 			return Math.abs(this.leftPost.y - this.rightPost.y);
 		}
 	}
+
+	isDefined ()
+	{
+		return this.getLeftPost() != null && this.getRightPost() != null;
+	}
 }
