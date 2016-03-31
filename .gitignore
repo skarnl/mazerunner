@@ -1,3 +1,4 @@
 web/js
 web/vendor/*
 node_modules
+.idea
