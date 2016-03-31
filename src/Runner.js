@@ -14,6 +14,8 @@ export class Runner {
 		this.y = point.y;
 		this.direction = direction;
 
+		this.iterations = 0;
+
 		//let's start inside the walls
 		switch(direction) {
 			case Runner.DIRECTION_DOWN:
@@ -22,83 +24,129 @@ export class Runner {
 				break;
 		}
 
-		this.debugDrawPixel(new Point(this.x, this.y));
+		this.debugDrawPixel("#ff0000");
 
-		this.lookAround();
-		//this.decide();
-		//this.callback if we are at crossroad
-		//continue in our initial direction - if possible, otherwise we go from UP, RIGHT, DOWN, LEFT
+		this.start();
+	}
+
+	start ()
+	{
+		this.iterations++;
+		
+		if(this.iterations < 12) {
+			this.lookAround();
+			this.decide();
+		}
 	}
 
 	lookAround()
 	{
-		let posibilities = [];
+		this.posibilities = [];
 
 		if (this.weCameFrom != Runner.DIRECTION_UP) {
 			if (this.canWeGoUp()) {
-				posibilities.push(Runner.DIRECTION_UP);
+				this.posibilities.push(Runner.DIRECTION_UP);
 			}
 		}
 
 		if (this.weCameFrom != Runner.DIRECTION_RIGHT) {
 			if (this.canWeGoRight()) {
-				posibilities.push(Runner.DIRECTION_UP);
+				this.posibilities.push(Runner.DIRECTION_RIGHT);
 			}
 		}
 
 		if (this.weCameFrom != Runner.DIRECTION_DOWN) {
 			if (this.canWeGoDown()) {
-				posibilities.push(Runner.DIRECTION_UP);
+				this.posibilities.push(Runner.DIRECTION_DOWN);
 			}
 		}
 
 		if (this.weCameFrom != Runner.DIRECTION_LEFT) {
 			if (this.canWeGoLeft()) {
-				posibilities.push(Runner.DIRECTION_UP);
+				this.posibilities.push(Runner.DIRECTION_LEFT);
 			}
 		}
 		
-		console.log(posibilities);
+		console.log(this.posibilities);
 	}
 
 	decide ()
 	{
+		if (this.posibilities.length === 0) {
+			this.deadEndCallback(this);
+			return;
+		}
+
+		//we have multiple possible directions to go
+		if (this.posibilities.length > 1) {
+
+			let index = this.posibilities.indexOf(this.direction);
+
+			if (index > -1) {
+				//strip out our own direction, since we can just continue
+				this.posibilities = this.posibilities.splice(index, 1);
+			} else {
+				//pick one and remove it - delegate the other to the crossRoadCallback
+				this.direction = this.posibilities[0];
+				this.posibilities = this.posibilities.splice(0, 1);
+			}
+
+			for(let i = 0; i < this.posibilities.length; i++) {
+				console.log('crossroad found!');
+				console.log(this.posibilities[i]);
+
+				this.crossRoadCallback({x: this.x, y: this.y, direction: this.posibilities[i]});
+			}
+		} else {
+			this.direction = this.posibilities[0];
+		}
+
+		this.moveInDirection();
+	}
+
+	moveInDirection ()
+	{
+		console.log('Runner::moveInDirection');
+		console.log(this.direction);
+		
 		switch(this.direction) {
 			case Runner.DIRECTION_UP:
-				//if (Utils.isWhite(this.x + 1, this.y)) {
-				//	this.y++;
-				//}
+				this.y -= this.pathWidth;
+				this.weCameFrom = Runner.DIRECTION_DOWN;
 				break;
 
 			case Runner.DIRECTION_RIGHT:
-				//if (Utils.isWhite(this.x + 1, this.y)) {
-				//	this.y++;
-				//}
+				this.x += this.pathWidth;
+				this.weCameFrom = Runner.DIRECTION_LEFT;
 				break;
 
 			case Runner.DIRECTION_DOWN:
-				if (Utils.isWhite(this.context, this.x, this.y + this.pathWidth + 1)) {
-					console.log('We can go DOWN');
-					this.y++;
-				}
+				this.y += this.pathWidth;
+				this.weCameFrom = Runner.DIRECTION_UP;
 				break;
 
 			case Runner.DIRECTION_LEFT:
-				//if (Utils.isWhite(this.x + 1, this.y)) {
-				//	this.y++;
-				//}
+				this.x -= this.pathWidth;
+				this.weCameFrom = Runner.DIRECTION_RIGHT;
 				break;
 		}
 
-		this.lookAround();
+		this.debugDrawPixel('#00ffcc');
+		this.start();
 	}
 
-	debugDrawPixel (point)
+	kill ()
 	{
-		this.context.fillStyle = '#ff00ff';
-		this.context.fillRect(point.x, point.y, this.pathWidth, this.pathWidth);
-		this.context.fillStyle = '#00ff33';
-		this.context.fillRect(point.x, point.y, 1, 1);
+		this.crossRoadCallback = null;
+		this.deadEndCallback = null;
+	}
+
+	debugDrawPixel (color)
+	{
+		this.context.fillStyle = color;
+		this.context.fillRect(this.x, this.y, this.pathWidth, this.pathWidth);
+		this.context.fillStyle = '#0000ff';
+		this.context.fillRect(this.x, this.y, 1, 1);
 	}
 
 	//LOOK METHODS

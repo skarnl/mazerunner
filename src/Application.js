@@ -49,9 +49,6 @@ export class Application
 
 	imageSuccessHandler (event)
 	{
-		console.log(event);
-		console.log('success');
-
 		this.context.drawImage(this.img, 0, 0, this.img.width, this.img.height);
 
 		//we have an image, let's go with tha banana
@@ -233,16 +230,31 @@ export class Application
 		runner.context = this.context;
 		runner.pathWidth = this.pathWidth;
 		runner.wallThickness = this.wallThickness;
-		runner.callback = this.crossroadFoundHandler.bind(this, {param1:'foo', param2: 'bar'});
+		runner.crossRoadCallback = this.crossRoadHandler.bind(this);
+		runner.deadEndCallback = this.deadEndHandler.bind(this);
+		runner.exitCallback = this.exitHandler.bind(this);
 
 		runner.startRunning(this.entrance.getLeftPost(), this.direction);
 	}
 
-	crossroadFoundHandler (params, runnerReference)
+	crossRoadHandler (runner)
 	{
-		console.log('Application::crossroadFoundHandler');
-		console.log(paramsx);
-		console.log(runnerReference);
+		console.log('Application::crossRoadHandler');
+		console.log(runner);
+	}
+
+	deadEndHandler (runner)
+	{
+		console.log('Application::deadEndHandler');
+		console.log(runner);
+
+		runner.kill();
+	}
+
+	exitHandler (runner)
+	{
+		console.log('Application::exitHandler');
+		console.log(runner);
 	}
 
 	drawPixel (startPoint)
