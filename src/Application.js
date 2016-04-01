@@ -7,7 +7,7 @@ import {Utils} from 'js/Utils.js';
 
 export class Application
 {
-    DEBUG = true;
+    DEBUG = false;
     DEBUG_PIXEL_SIZE = 1;
 
 	constructor()
@@ -242,11 +242,15 @@ export class Application
 		runner.startRunning(this.entrance.getLeftPost(), this.direction, true);
 	}
 
-    makeRunner ()
+    makeRunner (basedOnRunner)
     {
         let runner = new Runner();
 		runner.context = this.context;
 		runner.maze = this.maze;
+
+        if (basedOnRunner) {
+            runner.walkedPath = basedOnRunner.walkedPath.slice();
+        }
 
         //todo: add the maze dimensions, so the runner knows if he's outside the maze
 
@@ -262,14 +266,14 @@ export class Application
      * HANDLERS
      *
      **/
-    crossRoadHandler (paramsObject)
+    crossRoadHandler (paramsObject, reportingRunner )
 	{
 		console.log('Application::crossRoadHandler');
 		console.log(paramsObject);
 
         //todo: clone the previous runner, to keep it's path-history
 
-        let runner = this.makeRunner();
+        let runner = this.makeRunner(reportingRunner);
 		runner.startRunning(new Point(paramsObject.x, paramsObject.y), paramsObject.direction);
 	}
 
@@ -285,6 +289,10 @@ export class Application
 	{
 		console.log('Application::exitHandler');
 		console.log(runner);
+
+        for (let i = 0; i < runner.walkedPath.length; i++) {
+            this.drawRunner(runner.walkedPath[i]);
+        }
 	}
 
 	drawPixel (startPoint)
@@ -301,5 +309,11 @@ export class Application
            this.drawPixel(firstPoint);
            this.drawPixel(secondPoint);
         }
+    }
+
+    drawRunner(point)
+    {
+        this.context.fillStyle = Runner.COLOR__FINAL_PATH;
+		this.context.fillRect(point.x + 2, point.y + 2, this.maze.pathWidth - 4, this.maze.pathWidth - 4);
     }
 }

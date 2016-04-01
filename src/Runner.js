@@ -5,6 +5,7 @@ export class Runner {
 	constructor(id, context) {
 		this.id = id;
 		this.context = context;
+		this.walkedPath = [];
 	}
 
 	startRunning(point, direction, cheat = false) {
@@ -44,25 +45,18 @@ export class Runner {
 				break;
 		}
 
-		this.debugDrawPixel("#ff0000");
+		this.debugDrawPixel(Runner.COLOR__NEW);
 
-		this.start();
-	}
-
-	start() {
-		this.iterations++;
-
-		//todo: is this needed?
-		if (this.iterations < 300) {
-			this.lookAround();
-		}
+		this.lookAround();
 	}
 
 	lookAround() {
+
+		this.walkedPath.push(new Point(this.x, this.y));
+
 		this.posibilities = [];
 
 		if (this.areWeOutOfTheMaze()) {
-			this.debugDrawPixel('#ffa500');
 			this.exitCallback(this);
 			return;
 		}
@@ -98,7 +92,7 @@ export class Runner {
 	decide() {
 		if (this.posibilities.length === 0) {
 			this.deadEndCallback(this);
-			this.debugDrawPixel('#800080');
+			this.debugDrawPixel(Runner.COLOR__DEAD_END);
 			return;
 		}
 
@@ -130,7 +124,7 @@ export class Runner {
 				console.log(this.x, this.y);
 				console.log(nextPositionBasedOnDirection.x, nextPositionBasedOnDirection.y);
 
-				this.crossRoadCallback({x: nextPositionBasedOnDirection.x, y: nextPositionBasedOnDirection.y, direction: nextDirection});
+				this.crossRoadCallback({x: nextPositionBasedOnDirection.x, y: nextPositionBasedOnDirection.y, direction: nextDirection}, this);
 			}
 		} else {
 			this.direction = this.posibilities[0];
@@ -192,8 +186,8 @@ export class Runner {
 		this.x = nextPositionBasedOnDirection.x;
 		this.y = nextPositionBasedOnDirection.y;
 
-		this.debugDrawPixel('#00ffcc');
-		this.start();
+		this.debugDrawPixel(Runner.COLOR__NORMAL);
+		this.lookAround();
 	}
 
 	kill ()
@@ -207,8 +201,6 @@ export class Runner {
 	{
 		this.context.fillStyle = color;
 		this.context.fillRect(this.x, this.y, this.maze.pathWidth, this.maze.pathWidth);
-		this.context.fillStyle = '#0000ff';
-		this.context.fillRect(this.x, this.y, 1, 1);
 	}
 
 	//LOOK METHODS
@@ -243,3 +235,8 @@ Runner.DIRECTION_UP = 'up';
 Runner.DIRECTION_RIGHT = 'right';
 Runner.DIRECTION_DOWN = 'down';
 Runner.DIRECTION_LEFT = 'left';
+
+Runner.COLOR__NEW = '#caff70';
+Runner.COLOR__NORMAL = '#eee8cd';
+Runner.COLOR__DEAD_END = '#ff7256';
+Runner.COLOR__FINAL_PATH = '#ff1493';
