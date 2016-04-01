@@ -41,8 +41,10 @@ export class Application
 		this.img.addEventListener('error', this.imageErrorHandler.bind(this));
 		
 		// this.img.src = "media/maze.png";
-		this.img.src = "media/maze20x20.gif";
-		//this.img.src = "media/maze50x40.gif"; -- this doesn't work yet?
+		//this.img.src = "media/maze20x20.gif";
+		//this.img.src = "media/maze50x40.gif"; //-- this doesn't work yet?
+		//this.img.src = "media/maze100x100.gif";
+		this.img.src = "media/maze10x10.gif";
 		this.img.crossOrigin = "Anonymous";
 	}
 
