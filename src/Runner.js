@@ -7,7 +7,7 @@ export class Runner {
 		this.context = context;
 	}
 
-	startRunning(point, direction) {
+	startRunning(point, direction, cheat = false) {
 		console.log(this, '--- startRunning ---');
 
 		this.x = point.x;
@@ -17,9 +17,11 @@ export class Runner {
 		this.iterations = 0;
 
 		//let's start inside the walls
-		switch(direction) {
+		switch (direction) {
 			case Runner.DIRECTION_DOWN:
-				this.y += this.wallThickness;
+				if (cheat) {
+					this.y += this.wallThickness;
+				}
 				this.weCameFrom = Runner.DIRECTION_UP;
 				break;
 		}
@@ -29,18 +31,16 @@ export class Runner {
 		this.start();
 	}
 
-	start ()
-	{
+	start() {
 		this.iterations++;
-		
-		if(this.iterations < 12) {
+
+		if (this.iterations < 30) {
 			this.lookAround();
 			this.decide();
 		}
 	}
 
-	lookAround()
-	{
+	lookAround() {
 		this.posibilities = [];
 
 		if (this.weCameFrom != Runner.DIRECTION_UP) {
@@ -66,12 +66,11 @@ export class Runner {
 				this.posibilities.push(Runner.DIRECTION_LEFT);
 			}
 		}
-		
+
 		console.log(this.posibilities);
 	}
 
-	decide ()
-	{
+	decide() {
 		if (this.posibilities.length === 0) {
 			this.deadEndCallback(this);
 			return;
@@ -84,18 +83,26 @@ export class Runner {
 
 			if (index > -1) {
 				//strip out our own direction, since we can just continue
-				this.posibilities = this.posibilities.splice(index, 1);
+				this.posibilities.splice(index, 1);
 			} else {
 				//pick one and remove it - delegate the other to the crossRoadCallback
 				this.direction = this.posibilities[0];
 				this.posibilities = this.posibilities.splice(0, 1);
 			}
 
-			for(let i = 0; i < this.posibilities.length; i++) {
+			for (let i = 0; i < this.posibilities.length; i++) {
 				console.log('crossroad found!');
 				console.log(this.posibilities[i]);
 
-				this.crossRoadCallback({x: this.x, y: this.y, direction: this.posibilities[i]});
+				let nextDirection = this.posibilities[i],
+					nextPositionBasedOnDirection = this.calculateNextPosition(this.x, this.y, nextDirection);
+
+				console.log('----- CROSSSROAD -----');
+				console.log(nextDirection);
+				console.log(this.x, this.y);
+				console.log(nextPositionBasedOnDirection.x, nextPositionBasedOnDirection.y);
+
+				this.crossRoadCallback({x: nextPositionBasedOnDirection.x, y: nextPositionBasedOnDirection.y, direction: nextDirection});
 			}
 		} else {
 			this.direction = this.posibilities[0];
@@ -104,32 +111,58 @@ export class Runner {
 		this.moveInDirection();
 	}
 
+	calculateNextPosition(x, y, direction)
+	{
+		let point = new Point(this.x, this.y);
+
+		switch(direction) {
+			case Runner.DIRECTION_UP:
+				point.y -= (this.pathWidth + this.wallThickness);
+				break;
+
+			case Runner.DIRECTION_RIGHT:
+				point.x += (this.pathWidth + this.wallThickness);
+				break;
+
+			case Runner.DIRECTION_DOWN:
+				point.y += (this.pathWidth + this.wallThickness);
+				break;
+
+			case Runner.DIRECTION_LEFT:
+				point.x -= (this.pathWidth + this.wallThickness);
+				break;
+		}
+
+		return point;
+	}
+
 	moveInDirection ()
 	{
 		console.log('Runner::moveInDirection');
 		console.log(this.direction);
-		
+
+		let nextPositionBasedOnDirection = this.calculateNextPosition(this.x, this.y, this.direction);
+
 		switch(this.direction) {
 			case Runner.DIRECTION_UP:
-				this.y -= this.pathWidth;
 				this.weCameFrom = Runner.DIRECTION_DOWN;
 				break;
 
 			case Runner.DIRECTION_RIGHT:
-				this.x += this.pathWidth;
 				this.weCameFrom = Runner.DIRECTION_LEFT;
 				break;
 
 			case Runner.DIRECTION_DOWN:
-				this.y += this.pathWidth;
 				this.weCameFrom = Runner.DIRECTION_UP;
 				break;
 
 			case Runner.DIRECTION_LEFT:
-				this.x -= this.pathWidth;
 				this.weCameFrom = Runner.DIRECTION_RIGHT;
 				break;
 		}
+
+		this.x = nextPositionBasedOnDirection.x;
+		this.y = nextPositionBasedOnDirection.y;
 
 		this.debugDrawPixel('#00ffcc');
 		this.start();
@@ -139,6 +172,7 @@ export class Runner {
 	{
 		this.crossRoadCallback = null;
 		this.deadEndCallback = null;
+		this.exitCallback = null;
 	}
 
 	debugDrawPixel (color)
