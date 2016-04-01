@@ -45,18 +45,23 @@ export class Runner {
 				break;
 		}
 
-		this.debugDrawPixel(Runner.COLOR__NEW);
+		this.drawMyself(Runner.COLOR__NEW);
 
 		this.lookAround();
 	}
 
 	lookAround() {
 
+		if (this.killed) {
+			return;
+		}
+
 		this.walkedPath.push(new Point(this.x, this.y));
 
 		this.posibilities = [];
 
 		if (this.areWeOutOfTheMaze()) {
+			this.drawMyself(Runner.COLOR__EXIT);
 			this.exitCallback(this);
 			return;
 		}
@@ -92,7 +97,7 @@ export class Runner {
 	decide() {
 		if (this.posibilities.length === 0) {
 			this.deadEndCallback(this);
-			this.debugDrawPixel(Runner.COLOR__DEAD_END);
+			this.drawMyself(Runner.COLOR__DEAD_END);
 			return;
 		}
 
@@ -186,7 +191,7 @@ export class Runner {
 		this.x = nextPositionBasedOnDirection.x;
 		this.y = nextPositionBasedOnDirection.y;
 
-		this.debugDrawPixel(Runner.COLOR__NORMAL);
+		this.drawMyself(Runner.COLOR__NORMAL);
 		this.lookAround();
 	}
 
@@ -195,9 +200,10 @@ export class Runner {
 		this.crossRoadCallback = null;
 		this.deadEndCallback = null;
 		this.exitCallback = null;
+		this.killed = true;
 	}
 
-	debugDrawPixel (color)
+	drawMyself (color)
 	{
 		this.context.fillStyle = color;
 		this.context.fillRect(this.x, this.y, this.maze.pathWidth, this.maze.pathWidth);
@@ -240,3 +246,4 @@ Runner.COLOR__NEW = '#caff70';
 Runner.COLOR__NORMAL = '#eee8cd';
 Runner.COLOR__DEAD_END = '#ff7256';
 Runner.COLOR__FINAL_PATH = '#ff1493';
+Runner.COLOR__EXIT = '#bf3eff';

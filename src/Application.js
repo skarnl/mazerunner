@@ -18,8 +18,6 @@ export class Application
 
 	gogogo ()
 	{
-		console.log('Application.gogogo');
-
 		//loading the image is the kickstart of the whole story ^^
 		this.loadImage();
 	}
@@ -44,7 +42,7 @@ export class Application
 		
 		// this.img.src = "media/maze.png";
 		this.img.src = "media/maze20x20.gif";
-		//this.img.src = "media/maze50x40.gif";
+		//this.img.src = "media/maze50x40.gif"; -- this doesn't work yet?
 		this.img.crossOrigin = "Anonymous";
 	}
 
@@ -238,6 +236,8 @@ export class Application
 
 	spawnFirstRunner ()
 	{
+        this.runners = [];
+
 		let runner = this.makeRunner();
 		runner.startRunning(this.entrance.getLeftPost(), this.direction, true);
 	}
@@ -245,6 +245,7 @@ export class Application
     makeRunner (basedOnRunner)
     {
         let runner = new Runner();
+        runner.id = this.runners.length;
 		runner.context = this.context;
 		runner.maze = this.maze;
 
@@ -252,11 +253,11 @@ export class Application
             runner.walkedPath = basedOnRunner.walkedPath.slice();
         }
 
-        //todo: add the maze dimensions, so the runner knows if he's outside the maze
-
         runner.crossRoadCallback = this.crossRoadHandler.bind(this);
 		runner.deadEndCallback = this.deadEndHandler.bind(this);
 		runner.exitCallback = this.exitHandler.bind(this);
+
+        this.runners.push(runner);
 
         return runner;
     }
@@ -283,6 +284,8 @@ export class Application
 		console.log(runner);
 
 		runner.kill();
+
+        this.runners.splice(runner.id, 1);
 	}
 
 	exitHandler (runner)
@@ -292,6 +295,11 @@ export class Application
 
         for (let i = 0; i < runner.walkedPath.length; i++) {
             this.drawRunner(runner.walkedPath[i]);
+        }
+
+        //TODO does this goes well?
+        for (let j = 0; j < this.runners.length; j++) {
+            this.runners[j].kill();
         }
 	}
 
