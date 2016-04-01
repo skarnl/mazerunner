@@ -1,5 +1,6 @@
 import {Doorway} from 'js/Doorway.js';
 import {Events} from 'js/Events.js';
+import {Maze} from 'js/Maze.js';
 import {Point} from 'js/Point.js';
 import {Runner} from 'js/Runner.js';
 import {Utils} from 'js/Utils.js';
@@ -66,7 +67,9 @@ export class Application
 		this.determineWallThickness();
 		this.findEntrance();
 
-		this.spawnFirstWorker();
+        this.defineMaze();
+
+		this.spawnFirstRunner();
 	}
 
 	findTopLeftCorner ()
@@ -223,36 +226,50 @@ export class Application
 		this.pathWidth = this.entrance.getWidth();
 	}
 
-	spawnFirstWorker ()
+    defineMaze() {
+
+        let width = this.topRightCorner.x - this.topLeftCorner.x,
+            height = this.bottomRightCorner.y - this.topRightCorner.y;
+
+        this.maze = new Maze(this.topLeftCorner.x, this.topLeftCorner.y, width, height);
+        this.maze.pathWidth = this.pathWidth;
+        this.maze.wallThickness = this.wallThickness;
+    }
+
+	spawnFirstRunner ()
 	{
-		let runner = new Runner();
-		runner.context = this.context;
-		runner.pathWidth = this.pathWidth;
-		runner.wallThickness = this.wallThickness;
-		runner.crossRoadCallback = this.crossRoadHandler.bind(this);
-		runner.deadEndCallback = this.deadEndHandler.bind(this);
-		runner.exitCallback = this.exitHandler.bind(this);
-
-        //todo: add the maze dimensions, so the runner knows if he's outside the maze
-
+		let runner = this.makeRunner();
 		runner.startRunning(this.entrance.getLeftPost(), this.direction, true);
 	}
 
-	crossRoadHandler (paramsObject)
+    makeRunner ()
+    {
+        let runner = new Runner();
+		runner.context = this.context;
+		runner.maze = this.maze;
+
+        //todo: add the maze dimensions, so the runner knows if he's outside the maze
+
+        runner.crossRoadCallback = this.crossRoadHandler.bind(this);
+		runner.deadEndCallback = this.deadEndHandler.bind(this);
+		runner.exitCallback = this.exitHandler.bind(this);
+
+        return runner;
+    }
+
+    /**
+     *
+     * HANDLERS
+     *
+     **/
+    crossRoadHandler (paramsObject)
 	{
 		console.log('Application::crossRoadHandler');
 		console.log(paramsObject);
 
         //todo: clone the previous runner, to keep it's path-history
 
-        let runner = new Runner();
-		runner.context = this.context;
-		runner.pathWidth = this.pathWidth;
-		runner.wallThickness = this.wallThickness;
-		runner.crossRoadCallback = this.crossRoadHandler.bind(this);
-		runner.deadEndCallback = this.deadEndHandler.bind(this);
-		runner.exitCallback = this.exitHandler.bind(this);
-
+        let runner = this.makeRunner();
 		runner.startRunning(new Point(paramsObject.x, paramsObject.y), paramsObject.direction);
 	}
 

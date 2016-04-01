@@ -20,25 +20,25 @@ export class Runner {
 		switch (direction) {
 			case Runner.DIRECTION_UP:
 				if (cheat) {
-					this.y -= this.wallThickness;
+					this.y -= this.maze.wallThickness;
 				}
 				this.weCameFrom = Runner.DIRECTION_DOWN;
 				break;
 			case Runner.DIRECTION_RIGHT:
 				if (cheat) {
-					this.x += this.wallThickness;
+					this.x += this.maze.wallThickness;
 				}
 				this.weCameFrom = Runner.DIRECTION_LEFT;
 				break;
 			case Runner.DIRECTION_DOWN:
 				if (cheat) {
-					this.y += this.wallThickness;
+					this.y += this.maze.wallThickness;
 				}
 				this.weCameFrom = Runner.DIRECTION_UP;
 				break;
 			case Runner.DIRECTION_LEFT:
 				if (cheat) {
-					this.x -= this.wallThickness;
+					this.x -= this.maze.wallThickness;
 				}
 				this.weCameFrom = Runner.DIRECTION_RIGHT;
 				break;
@@ -55,12 +55,17 @@ export class Runner {
 		//todo: is this needed?
 		if (this.iterations < 300) {
 			this.lookAround();
-			this.decide();
 		}
 	}
 
 	lookAround() {
 		this.posibilities = [];
+
+		if (this.areWeOutOfTheMaze()) {
+			this.debugDrawPixel('#ffa500');
+			this.exitCallback(this);
+			return;
+		}
 
 		if (this.weCameFrom != Runner.DIRECTION_UP) {
 			if (this.canWeGoUp()) {
@@ -87,11 +92,13 @@ export class Runner {
 		}
 
 		console.log(this.posibilities);
+		this.decide();
 	}
 
 	decide() {
 		if (this.posibilities.length === 0) {
 			this.deadEndCallback(this);
+			this.debugDrawPixel('#800080');
 			return;
 		}
 
@@ -138,19 +145,19 @@ export class Runner {
 
 		switch(direction) {
 			case Runner.DIRECTION_UP:
-				point.y -= (this.pathWidth + this.wallThickness);
+				point.y -= (this.maze.pathWidth + this.maze.wallThickness);
 				break;
 
 			case Runner.DIRECTION_RIGHT:
-				point.x += (this.pathWidth + this.wallThickness);
+				point.x += (this.maze.pathWidth + this.maze.wallThickness);
 				break;
 
 			case Runner.DIRECTION_DOWN:
-				point.y += (this.pathWidth + this.wallThickness);
+				point.y += (this.maze.pathWidth + this.maze.wallThickness);
 				break;
 
 			case Runner.DIRECTION_LEFT:
-				point.x -= (this.pathWidth + this.wallThickness);
+				point.x -= (this.maze.pathWidth + this.maze.wallThickness);
 				break;
 		}
 
@@ -199,7 +206,7 @@ export class Runner {
 	debugDrawPixel (color)
 	{
 		this.context.fillStyle = color;
-		this.context.fillRect(this.x, this.y, this.pathWidth, this.pathWidth);
+		this.context.fillRect(this.x, this.y, this.maze.pathWidth, this.maze.pathWidth);
 		this.context.fillStyle = '#0000ff';
 		this.context.fillRect(this.x, this.y, 1, 1);
 	}
@@ -213,18 +220,22 @@ export class Runner {
 
 	canWeGoRight()
 	{
-		return (Utils.isWhite(this.context, this.x + this.pathWidth + 1, this.y));
+		return (Utils.isWhite(this.context, this.x + this.maze.pathWidth + 1, this.y));
 	}
 
 	canWeGoDown()
 	{
-		return (Utils.isWhite(this.context, this.x, this.y + this.pathWidth + 1));
+		return (Utils.isWhite(this.context, this.x, this.y + this.maze.pathWidth + 1));
 	}
 
 	canWeGoLeft()
 	{
 		//we are positioned on the left side of the path, so no need to use the pathWidth here
 		return (Utils.isWhite(this.context, this.x - 1, this.y));
+	}
+
+	areWeOutOfTheMaze() {
+		return !this.maze.isInside(this.x, this.y);
 	}
 }
 
