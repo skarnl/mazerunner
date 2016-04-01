@@ -226,13 +226,14 @@ export class Application
 	spawnFirstWorker ()
 	{
 		let runner = new Runner();
-		runner.id = new Date().getTime();
 		runner.context = this.context;
 		runner.pathWidth = this.pathWidth;
 		runner.wallThickness = this.wallThickness;
 		runner.crossRoadCallback = this.crossRoadHandler.bind(this);
 		runner.deadEndCallback = this.deadEndHandler.bind(this);
 		runner.exitCallback = this.exitHandler.bind(this);
+
+        //todo: add the maze dimensions, so the runner knows if he's outside the maze
 
 		runner.startRunning(this.entrance.getLeftPost(), this.direction, true);
 	}
@@ -242,8 +243,9 @@ export class Application
 		console.log('Application::crossRoadHandler');
 		console.log(paramsObject);
 
+        //todo: clone the previous runner, to keep it's path-history
+
         let runner = new Runner();
-		runner.id = new Date().getTime();
 		runner.context = this.context;
 		runner.pathWidth = this.pathWidth;
 		runner.wallThickness = this.wallThickness;

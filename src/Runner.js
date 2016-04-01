@@ -18,11 +18,29 @@ export class Runner {
 
 		//let's start inside the walls
 		switch (direction) {
+			case Runner.DIRECTION_UP:
+				if (cheat) {
+					this.y -= this.wallThickness;
+				}
+				this.weCameFrom = Runner.DIRECTION_DOWN;
+				break;
+			case Runner.DIRECTION_RIGHT:
+				if (cheat) {
+					this.x += this.wallThickness;
+				}
+				this.weCameFrom = Runner.DIRECTION_LEFT;
+				break;
 			case Runner.DIRECTION_DOWN:
 				if (cheat) {
 					this.y += this.wallThickness;
 				}
 				this.weCameFrom = Runner.DIRECTION_UP;
+				break;
+			case Runner.DIRECTION_LEFT:
+				if (cheat) {
+					this.x -= this.wallThickness;
+				}
+				this.weCameFrom = Runner.DIRECTION_RIGHT;
 				break;
 		}
 
@@ -34,7 +52,8 @@ export class Runner {
 	start() {
 		this.iterations++;
 
-		if (this.iterations < 30) {
+		//todo: is this needed?
+		if (this.iterations < 300) {
 			this.lookAround();
 			this.decide();
 		}
@@ -79,6 +98,7 @@ export class Runner {
 		//we have multiple possible directions to go
 		if (this.posibilities.length > 1) {
 
+			//can we continue in the direction we already are using?
 			let index = this.posibilities.indexOf(this.direction);
 
 			if (index > -1) {
@@ -87,11 +107,12 @@ export class Runner {
 			} else {
 				//pick one and remove it - delegate the other to the crossRoadCallback
 				this.direction = this.posibilities[0];
-				this.posibilities = this.posibilities.splice(0, 1);
+				this.posibilities.splice(0, 1);
 			}
 
 			for (let i = 0; i < this.posibilities.length; i++) {
 				console.log('crossroad found!');
+				console.log(this.posibilities);
 				console.log(this.posibilities[i]);
 
 				let nextDirection = this.posibilities[i],
